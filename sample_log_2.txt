@@ -1,0 +1,1 @@
+127.0.01 - user [15/Apr/2018:01:17:49 +0000] "GET /wordpress/index.php/2018/04/14/test/ HTTP/1.1" 200 0 "http://localhost/wordpress/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/604.4.7 (KHTML, like Gecko) Version/11.0.2 Safari/604.4.7"

@@ -1,0 +1,8 @@
+#webalizer output files
+index.html
+ctry*
+daily*
+hourly*
+usage*
+webalizer.hist
+
