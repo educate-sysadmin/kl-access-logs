@@ -1,4 +1,0 @@
-cfcd208495d565ef66e7dff9f98764da - cfcd208495d565ef66e7dff9f98764da [16/Apr/2018:10:34:56 +0000] "GET /wordpress/partners/ HTTP/1.1" 200 0 "http://localhost/wordpress/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/65.0.3325.181 Chrome/65.0.3325.181 Safari/537.36"
-cfcd208495d565ef66e7dff9f98764da - cfcd208495d565ef66e7dff9f98764da [16/Apr/2018:10:35:01 +0000] "GET /wordpress/media/ HTTP/1.1" 200 0 "http://localhost/wordpress/partners/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/65.0.3325.181 Chrome/65.0.3325.181 Safari/537.36"
-cfcd208495d565ef66e7dff9f98764da - cfcd208495d565ef66e7dff9f98764da [16/Apr/2018:10:35:05 +0000] "GET /wordpress/news/ HTTP/1.1" 200 0 "http://localhost/wordpress/media/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/65.0.3325.181 Chrome/65.0.3325.181 Safari/537.36"
-
