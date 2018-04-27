@@ -5,4 +5,6 @@ rm daily*
 rm hourly*
 rm usage*
 rm webalizer.hist
+rm sample*
+rm *.csv
 
