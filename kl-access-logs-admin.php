@@ -122,32 +122,40 @@ function klal_admin_init(){
     	//$wpdb->show_errors(); // debug only not production
     	
         // copy into archive
+        $insert_sql = "INSERT INTO ".$klal_table_name_archive." ( SELECT * FROM ".$klal_table_name." WHERE ".$klal_table_name.".datetime < '".$_POST['klal_archive_date']."');";
+        
         $insert_result = $wpdb->query( 
-				"
-            	INSERT INTO ".$klal_table_name_archive."
-            	 ( SELECT * FROM ".$klal_table_name." 
-				 WHERE ".$klal_table_name.".timestamp < '".$_POST['klal_archive_date']."');" 
+            $insert_sql
 		);
-
+		
 		// delete from current log
 		if ($insert_result) {
-			$delete_result = $wpdb->query( 
-				"
-            	DELETE FROM ".$klal_table_name."
-				 WHERE timestamp < '".$_POST['klal_archive_date']."';" 
+		    $delete_sql = "DELETE FROM ".$klal_table_name." WHERE datetime < '".$_POST['klal_archive_date']."';";
+		
+			$delete_result = $wpdb->query( 			
+			    $delete_sql
 			);
 			if ($delete_result) {
 				echo '<p>'.'Done'.'</p>';
 			} else {
-				echo '<p>'.'Error clearning current log table'.'</p>';
+				echo '<p>'.'Error clearing current log table'.'</p>';
 			}
+		} else {
+		    	echo '<p>'.'No records to archive or error populating archive table'.'</p>';
 		}
   	}
 	
     // show logs
     echo '<h2>Current logs</h2>';
     echo klal_get_logs();
-    echo '<p>'.'<a href="">'.'Refresh'.'</a>'.'</p>'	;
+    // few admin options
+    echo '<p>';
+    echo '<a href="">'.'Refresh'.'</a>';
+    echo '&nbsp|&nbsp';
+    echo '<a href="'.$_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'].'&download=xlsx'.'" target="_blank">'.'Download .xlsx'.'</a>';
+    echo '&nbsp|&nbsp';
+    echo '<a href="'.$_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'].'&download=clf'.'" target="_blank">'.'Download CLF'.'</a>';
+    echo '</p>'	;
     
     // admin options
     echo '<h2>Archive logs</h2>';
