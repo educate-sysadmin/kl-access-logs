@@ -1,8 +1,11 @@
-#webalizer output files
+#webalizer output and other sample files
 index.html
 ctry*
 daily*
 hourly*
 usage*
 webalizer.hist
+#sample log files
+sample*
+*.csv
 
