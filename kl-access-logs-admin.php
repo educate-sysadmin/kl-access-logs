@@ -6,14 +6,40 @@ Author URI: https://educate.london
 License: GPL2
 */
 add_action('admin_menu', 'klal_plugin_menu');
+
  
 function klal_plugin_menu(){
         add_menu_page( 'KL Access Logs Admin', 'KL Access Logs', 'manage_options', 'kl-access-logs-plugin', 'klal_admin_init' );
 }
 
-function klal_show_logs() {
+// handle downloading
+add_action('admin_init','klal_requests');
+function klal_requests() {
+    if (isset($_GET['download'])) {
+        if ($_GET['download'] =="xlsx") {  
+            header("Content-type: application/x-msdownload",true,200);
+            header("Content-Disposition: attachment; filename=kl_access_log.xlsx");
+            header("Pragma: no-cache");
+            header("Expires: 0");
+            echo klal_get_logs();
+            exit();
+        }
+        if ($_GET['download'] =="clf") {  
+            header("Content-type: application/text",true,200);
+            header("Content-Disposition: attachment; filename=kl_access.log");
+            header("Pragma: no-cache");
+            header("Expires: 0");
+            echo klal_get_logs_clf();
+            exit();
+        }        
+    }
+}
+
+function klal_get_logs() {
 	global $wp, $wpdb;
 	global $klal_table_name;
+	
+	$return = "";
 	
 	// get field details for table heading
 	$describe = $wpdb->get_results( 
@@ -21,36 +47,63 @@ function klal_show_logs() {
 	);	
 	if (!$describe) return;
 	
-	echo '<table id = "kl_access_logs" class="kl_access_logs datatable">'."\n";
-	echo '<thead>'."\n";
-	echo '<tr>'."\n";	
+	$return .= '<table id = "kl_access_logs" class="kl_access_logs datatable">'."\n";
+	$return .= '<thead>'."\n";
+	$return .= '<tr>'."\n";	
 	foreach ($describe as $field) {
-	    echo '<th>'.$field->Field.'</th>';
+	    $return .= '<th>'.$field->Field.'</th>';
 	}
-	echo '</tr>'."\n";	
-	echo '</thead>'."\n";		
+	$return .= '</tr>'."\n";	
+	$return .= '</thead>'."\n";		
 	
-	echo '<tbody>'."\n";	
+	$return .='<tbody>'."\n";	
 	$result = $wpdb->get_results( 
-		"SELECT * FROM ".$klal_table_name.";"
+		"SELECT * FROM ".$klal_table_name." ORDER BY datetime DESC;"
 	);
     
 	if ($result) {
 	foreach ($result as $row) {
-    	echo '<tr>'."\n";		
+    	$return .= '<tr>'."\n";		
     	foreach ($row as $key => $val) {
-    	    echo '<td class = "kl_access_logs_'.$key.'">';
-    	    echo $val;
-    	    echo '</td>';
+    	    $return .= '<td class = "kl_access_logs_'.$key.'">';
+    	    $return .= $val;
+    	    $return .= '</td>';
     	}
-        echo '</tr>'."\n";		    
+        $return .= '</tr>'."\n";		    
 	}
 	
 	} else {
 		//echo '<p>No results.</p>';
 	}
-	echo '</tbody>'."\n";	
-	echo '</table>'."\n";	
+	$return .= '</tbody>'."\n";	
+	$return .= '</table>'."\n";	
+	
+	return $return;
+}
+
+function klal_get_logs_clf() {
+    // ref https://docstore.mik.ua/orelly/webprog/pcook/ch11_14.htm
+    // e.g. 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"
+    
+	global $wp, $wpdb;
+	global $klal_table_name;	
+	
+	$return = "";
+	
+	$result = $wpdb->get_results( 
+		"SELECT * FROM ".$klal_table_name.";"
+	);
+    
+	if ($result) {
+	    foreach ($result as $row) {
+        	$return .= $row->remote_host.' '.$row->client.' '.$row->userid.' '.$row->time.' '.'"'.$row->method.' '.$row->request.' '.$row->protocol.'"'.' '.$row->status.' '.$row->size.' '.'"'.$row->referer.'"'.' '.'"'.$row->useragent.'"'."\n";
+	    }
+	
+	} else {
+		//echo '<p>No results.</p>';
+	}
+	
+	return $return;
 }
  
 function klal_admin_init(){
@@ -68,61 +121,32 @@ function klal_admin_init(){
     	echo '<p>Archiving logs...</p>';
     	//$wpdb->show_errors(); // debug only not production
     	
-    	/*
-
-		$sql = "SELECT * FROM ".$klal_table_name." WHERE timestamp < '".$_POST['klal_archive_date']."'".";";
-    	$result = $wpdb->get_results( 
-			$sql
+        // copy into archive
+        $insert_result = $wpdb->query( 
+				"
+            	INSERT INTO ".$klal_table_name_archive."
+            	 ( SELECT * FROM ".$klal_table_name." 
+				 WHERE ".$klal_table_name.".timestamp < '".$_POST['klal_archive_date']."');" 
 		);
-*/
 
-
-		//if ($result) 
-		//{
-		/*
-			// insert rows into archive table			
-			foreach ($result as $row) {
-				$insert_result = $wpdb->insert( 
-					$klal_table_name_archive, 
-					array( 
-						'clf' => $row->clf, 
-					),	
-					array( 
-						'%s', 
-					)
-				);
-				// if error, stop
-				if (!$insert_result) {
-					echo '<p>'.'Error updating archive table'.'</p>';
-					break;
-				}
-			}
-*/
-            $insert_result = $wpdb->query( 
-					"
-                	INSERT INTO ".$klal_table_name_archive."
-                	 ( SELECT * FROM ".$klal_table_name." 
- 					 WHERE ".$klal_table_name.".timestamp < '".$_POST['klal_archive_date']."');" 
+		// delete from current log
+		if ($insert_result) {
+			$delete_result = $wpdb->query( 
+				"
+            	DELETE FROM ".$klal_table_name."
+				 WHERE timestamp < '".$_POST['klal_archive_date']."';" 
 			);
-
-			// delete from current log
-			if ($insert_result) {
-				$delete_result = $wpdb->query( 
-					"
-                	DELETE FROM ".$klal_table_name."
- 					 WHERE timestamp < '".$_POST['klal_archive_date']."';" 
-				);
-				if ($delete_result) {
-					echo '<p>'.'Done'.'</p>';
-				} else {
-					echo '<p>'.'Error clearning current log table'.'</p>';
-				}
+			if ($delete_result) {
+				echo '<p>'.'Done'.'</p>';
+			} else {
+				echo '<p>'.'Error clearning current log table'.'</p>';
 			}
+		}
   	}
 	
     // show logs
     echo '<h2>Current logs</h2>';
-    klal_show_logs();
+    echo klal_get_logs();
     echo '<p>'.'<a href="">'.'Refresh'.'</a>'.'</p>'	;
     
     // admin options

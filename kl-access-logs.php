@@ -38,6 +38,7 @@ CREATE TABLE `wp_kl_access_logs` (
   `request` varchar(256) NOT NULL,
   `protocol` varchar(8) NOT NULL,
   `status` varchar(8) NOT NULL,
+  `size` int(11) NOT NULL DEFAULT '0',  
   `referer` varchar(256) NOT NULL,
   `useragent` varchar(256) DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -60,6 +61,7 @@ CREATE TABLE `wp_kl_access_logs_archive` (
   `request` varchar(256) NOT NULL,
   `protocol` varchar(8) NOT NULL,
   `status` varchar(8) NOT NULL,
+  `size` int(11) NOT NULL DEFAULT '0',
   `referer` varchar(256) DEFAULT NULL,
   `useragent` varchar(256) DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -208,12 +210,12 @@ function klal_track () {
 			    'request' => $request,
 			    'protocol' => $protocol,
 			    'status' => $status,
+			    'size' => $size,
 			    'referer' => $referer,
 			    'useragent' => $useragent			    
 		    ),	
-		    array('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')
+		    array('%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')
 	    );
-	    write_log("reslut=".$result);
 	    
     } catch (Exception $e) {
         return;

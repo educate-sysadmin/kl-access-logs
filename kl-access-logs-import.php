@@ -15,13 +15,12 @@ while (! feof($fh)) {
 
     if (preg_match($pattern,$line,$matches)) {
         list($whole_match,$remote_host,$client,$userid,$time,
-         $method,$request,$protocol,$status,$size,$referer,
-         $useragent) = $matches; // (breaks up request into method,request and protocol)
+         $method,$request,$protocol,$status,$size,$referer,$useragent) = $matches; // (breaks up request into method,request and protocol)
          $timestring = substr($time,1,strlen($time)-2);
         $datetime = date("Y-m-d H:i:s",strtotime($timestring));
                  
-         $sql = "INSERT INTO wp_kl_access_logs (remote_host, client, userid, time, datetime, method, request, protocol, status, referer, useragent) 
-            VALUES ( '$remote_host','$client','$userid','$time','$datetime','$method','$request','$protocol','$status','$referer','$useragent');";
+         $sql = "INSERT INTO wp_kl_access_logs (remote_host, client, userid, time, datetime, method, request, protocol, status, size, referer, useragent) 
+            VALUES ( '$remote_host','$client','$userid','$time','$datetime','$method','$request','$protocol','$status',$size,'$referer','$useragent');";
            
          echo $sql."\n";
     }
