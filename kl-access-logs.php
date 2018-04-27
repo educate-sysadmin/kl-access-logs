@@ -184,7 +184,7 @@ function klal_track () {
 	    if (get_option('klal_hide_userid')) {
 		    $userid= md5($userid + get_option('klal_salt'));
 	    }
-	    $time = date("d/M/Y:H:i:s O");
+	    $time = '['.date("d/M/Y:H:i:s O").']';
 	    $datetime = date("Y-m-d H:i:s");
 	    $method = $_SERVER['REQUEST_METHOD'];
 	    $request = $_SERVER['REQUEST_URI'];
