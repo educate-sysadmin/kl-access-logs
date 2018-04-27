@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: KL Access Logs
-Plugin URI: https://github.com/educate-sysadmin/...
-Description: Save (Combined) Common Log Format access logs in database
-Version: 0.1.1
+Plugin URI: https://github.com/educate-sysadmin/kl-access-logs
+Description: Save modified (Combined) Common Log Format access logs in database
+Version: 0.2
 Author: b.cunningham@ucl.ac.uk
 Author URI: https://educate.london
 License: GPL2
@@ -12,8 +12,8 @@ License: GPL2
 require_once('kl-access-logs-options.php');
 require_once('kl-access-logs-admin.php');
 
-$klal_db_version = "0.1.1";
-$klal_table_name = $wpdb->prefix . "kl_access_log";
+$klal_db_version = "0.2";
+$klal_table_name = $wpdb->prefix . "kl_access_logs";
 $klal_table_name_archive = $klal_table_name . "_archive";
 
 // create or update database table
@@ -22,34 +22,66 @@ function klal_install () {
 	global $klal_db_version, $klal_table_name, $klal_table_name_archive;
 
     // setup database
-	$charset_collate = $wpdb->get_charset_collate();
+    // TODO
+    /*
+SET NAMES utf8;
+SET time_zone = '+00:00';
 
-	$sql = "CREATE TABLE ".$klal_table_name." (
-  		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		clf text,
-		timestamp timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		PRIMARY KEY (id)
-	) $charset_collate;";
+CREATE TABLE `wp_kl_access_logs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `remote_host` varchar(32) NOT NULL,
+  `client` varchar(1) NOT NULL,
+  `userid` varchar(128) NOT NULL,
+  `time` varchar(32) NOT NULL,
+  `datetime` datetime DEFAULT NULL,
+  `method` varchar(8) NOT NULL,
+  `request` varchar(256) NOT NULL,
+  `protocol` varchar(8) NOT NULL,
+  `status` varchar(8) NOT NULL,
+  `referer` varchar(256) NOT NULL,
+  `useragent` varchar(256) DEFAULT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `userid` (`userid`),
+  KEY `request` (`request`),
+  KEY `remote_host` (`remote_host`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+*/
 
+/*
+CREATE TABLE `wp_kl_access_logs_archive` (
+  `id` int(11) NOT NULL,
+  `remote_host` varchar(32) NOT NULL,
+  `client` varchar(1) NOT NULL,
+  `userid` varchar(128) NOT NULL,
+  `time` varchar(32) NOT NULL,
+  `datetime` datetime DEFAULT NULL,
+  `method` varchar(8) NOT NULL,
+  `request` varchar(256) NOT NULL,
+  `protocol` varchar(8) NOT NULL,
+  `status` varchar(8) NOT NULL,
+  `referer` varchar(256) DEFAULT NULL,
+  `useragent` varchar(256) DEFAULT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `userid` (`userid`),
+  KEY `request` (`request`),
+  KEY `remote_host` (`remote_host`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+*/
 
-    $sql2 = 
-	"CREATE TABLE ".$klal_table_name_archive." (
-  		id mediumint(9) NOT NULL AUTO_INCREMENT,
-		clf text,
-		PRIMARY KEY (id)
-	) $charset_collate;";
-
+	/*
 	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 	dbDelta( $sql );
-	dbDelta( $sql2 );
     add_option("klal_db_version", $klal_db_version);
+    */
 
     // set defaults for options
     update_option('klal_posts_filter_false','wp-admin,wp-login.php,login,logout, wp-content');
     update_option('klal_roles_filter_false','administrator');
 
 }
-				
+		
 // handle the tracking
 function klal_track () {
 
@@ -138,11 +170,11 @@ function klal_track () {
 	    }
 	    if (!$track) return;
 				
-	    // save as Combined CLF 
-	    // e.g. 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"
-	    $ip = $_SERVER['REMOTE_ADDR'];
+	    // save as modified Combined CLF 
+	    // e.g. 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"	    
+	    $remote_host = $_SERVER['REMOTE_ADDR'];
 	    if (get_option('klal_hide_ip')) {
-		    $ip= md5($ip + get_option('klal_salt'));	
+		    $remote_host = md5($remote_host + get_option('klal_salt'));	
 	    }
 	    $client = "-"; 
 	    $user = wp_get_current_user(); // use wordpress user	
@@ -151,31 +183,41 @@ function klal_track () {
 		    $userid= md5($userid + get_option('klal_salt'));
 	    }
 	    $time = date("d/M/Y:H:i:s O");
-	    $request = $_SERVER['REQUEST_METHOD'].' '.$_SERVER['REQUEST_URI'].' '.$_SERVER['SERVER_PROTOCOL'];
+	    $datetime = date("Y-m-d H:i:s");
+	    $method = $_SERVER['REQUEST_METHOD'];
+	    $request = $_SERVER['REQUEST_URI'];
+	    $protocol = $_SERVER['SERVER_PROTOCOL'];
 	    $status = "200"; // todo?
 	    $size = 0; // todo
-	    $referrer = $_SERVER['HTTP_REFERER'];
+	    $referer = $_SERVER['HTTP_REFERER'];
 	    if (get_option('klal_store_useragent')) {
 		    $useragent = $_SERVER['HTTP_USER_AGENT'];
 	    } else {
 		    $useragent = "-";
 	    }
 			
-	    $clf = $ip.' '.$client.' '.$userid.' '.'['.$time.']'.' '.'"'.$request.'"'.' '.$status.' '.$size.' '.'"'.$referrer.'"'.' '.'"'.$useragent.'"';
-
-	    $wpdb->insert( 
+	    $result = $wpdb->insert( 
 		    $klal_table_name, 
 		    array( 
-			    'clf' => $clf, 
+			    'remote_host' => $remote_host, 
+			    'client' => $client,
+			    'userid' => $userid,
+			    'time' => $time,
+			    'datetime' => $datetime,
+			    'method' => $method,
+			    'request' => $request,
+			    'protocol' => $protocol,
+			    'status' => $status,
+			    'referer' => $referer,
+			    'useragent' => $useragent			    
 		    ),	
-		    array( 
-			    '%s', 
-		    )
+		    array('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s')
 	    );
+	    write_log("reslut=".$result);
+	    
     } catch (Exception $e) {
         return;
-        // TODO error logging
-        //echo 'Caught exception: ',  $e->getMessage(), "\n";
+        write_log($e->getMessage()."\n");
     }
 }
 		

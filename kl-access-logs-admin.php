@@ -15,19 +15,42 @@ function klal_show_logs() {
 	global $wp, $wpdb;
 	global $klal_table_name;
 	
-	$result = $wpdb->get_results( 
-		"SELECT clf FROM ".$klal_table_name.";"
-	);
-
-	if ($result) {
-	    echo '<textarea class="kl_access_logs" style="width: 98%;" rows="20" readonly>'."\n"; 
-		foreach ( $result as $row )	{
-			echo $row->clf."\n";
-		}
-	    echo '</textarea>'."\n";
-	} else {
-		echo '<p>No results.</p>';
+	// get field details for table heading
+	$describe = $wpdb->get_results( 
+		"DESCRIBE ".$klal_table_name.";"
+	);	
+	if (!$describe) return;
+	
+	echo '<table id = "kl_access_logs" class="kl_access_logs datatable">'."\n";
+	echo '<thead>'."\n";
+	echo '<tr>'."\n";	
+	foreach ($describe as $field) {
+	    echo '<th>'.$field->Field.'</th>';
 	}
+	echo '</tr>'."\n";	
+	echo '</thead>'."\n";		
+	
+	echo '<tbody>'."\n";	
+	$result = $wpdb->get_results( 
+		"SELECT * FROM ".$klal_table_name.";"
+	);
+    
+	if ($result) {
+	foreach ($result as $row) {
+    	echo '<tr>'."\n";		
+    	foreach ($row as $key => $val) {
+    	    echo '<td class = "kl_access_logs_'.$key.'">';
+    	    echo $val;
+    	    echo '</td>';
+    	}
+        echo '</tr>'."\n";		    
+	}
+	
+	} else {
+		//echo '<p>No results.</p>';
+	}
+	echo '</tbody>'."\n";	
+	echo '</table>'."\n";	
 }
  
 function klal_admin_init(){
@@ -44,13 +67,19 @@ function klal_admin_init(){
 	    // todo validate klal_archive_date
     	echo '<p>Archiving logs...</p>';
     	//$wpdb->show_errors(); // debug only not production
+    	
+    	/*
 
-		$sql = "SELECT clf FROM ".$klal_table_name." WHERE timestamp < '".$_POST['klal_archive_date']."'".";";
+		$sql = "SELECT * FROM ".$klal_table_name." WHERE timestamp < '".$_POST['klal_archive_date']."'".";";
     	$result = $wpdb->get_results( 
 			$sql
 		);
+*/
 
-		if ($result) {
+
+		//if ($result) 
+		//{
+		/*
 			// insert rows into archive table			
 			foreach ($result as $row) {
 				$insert_result = $wpdb->insert( 
@@ -68,6 +97,14 @@ function klal_admin_init(){
 					break;
 				}
 			}
+*/
+            $insert_result = $wpdb->query( 
+					"
+                	INSERT INTO ".$klal_table_name_archive."
+                	 ( SELECT * FROM ".$klal_table_name." 
+ 					 WHERE ".$klal_table_name.".timestamp < '".$_POST['klal_archive_date']."');" 
+			);
+
 			// delete from current log
 			if ($insert_result) {
 				$delete_result = $wpdb->query( 
@@ -81,9 +118,6 @@ function klal_admin_init(){
 					echo '<p>'.'Error clearning current log table'.'</p>';
 				}
 			}
-  		} else {
-  			echo '<p>'.'Error querying current log or no logs to archive'.'</p>';
-  		}
   	}
 	
     // show logs
@@ -94,7 +128,7 @@ function klal_admin_init(){
     // admin options
     echo '<h2>Archive logs</h2>';
     echo '<form action="" method="post">';
-	// this is a WordPress security feature - see: https://codex.wordpress.org/WordPress_Nonces
+	// nonce: this is a WordPress security feature - see: https://codex.wordpress.org/WordPress_Nonces
 	wp_nonce_field('klal_archive_nonce');
   	echo '<input type="hidden" value="true" name="klal_archive" />';  	
   	echo '<label for = "klal_archive_date">Archive logs prior to timestamp:</label>'.'&nbsp;';
@@ -106,3 +140,4 @@ function klal_admin_init(){
 	echo '</div>'."\n"; // class="wrap
         
 }
+
