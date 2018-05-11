@@ -182,7 +182,7 @@ function klal_track () {
 	    $user = wp_get_current_user(); // use wordpress user	
 	    $userid = $user?$user->user_login:null;
 	    if (get_option('klal_hide_userid')) {
-		    $userid= md5($userid + get_option('klal_salt'));
+		    $userid= md5($userid . get_option('klal_salt'));
 	    }
 	    $time = '['.date("d/M/Y:H:i:s O").']';
 	    $datetime = date("Y-m-d H:i:s");
