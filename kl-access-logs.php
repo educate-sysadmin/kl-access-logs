@@ -79,9 +79,10 @@ CREATE TABLE `wp_kl_access_logs_archive` (
     */
 
     // set defaults for options
+    update_option('klal_tables','kl_access_logs,kl_access_logs_archive');
     update_option('klal_posts_filter_false','wp-admin,wp-login.php,login,logout, wp-content');
     update_option('klal_roles_filter_false','administrator');
-
+    update_option('klal_admin_capability','manage_options');    
 }
 		
 // handle the tracking
@@ -226,5 +227,3 @@ function klal_track () {
 // put it together
 register_activation_hook( __FILE__, 'klal_install' );
 add_action( 'init', 'klal_track' );
-
-

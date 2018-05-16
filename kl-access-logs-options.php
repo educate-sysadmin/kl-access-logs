@@ -11,7 +11,7 @@ add_action('admin_menu', 'klal_plugin_create_menu');
 
 function klal_plugin_create_menu() {
 	//create options page
-	add_options_page('KL Access Logs Plugin Settings', 'KL Access Logs', 'manage_options', __FILE__, 'klal_plugin_settings_page' , __FILE__ );
+	add_options_page('KL Access Logs Plugin Settings', 'KL Access Logs', get_option('klal_admin_capability')?get_option('klal_admin_capability'):'manage_options', __FILE__, 'klal_plugin_settings_page' , __FILE__ );
 
 	//call register settings function
 	add_action( 'admin_init', 'register_klal_plugin_settings' );
@@ -19,6 +19,7 @@ function klal_plugin_create_menu() {
 
 function register_klal_plugin_settings() {
 	//register our settings
+	register_setting( 'klal-plugin-settings-group', 'klal_tables' ); 	
 	register_setting( 'klal-plugin-settings-group', 'klal_posts_filter_false');
 	register_setting( 'klal-plugin-settings-group', 'klal_posts_filter_true' );
     register_setting( 'klal-plugin-settings-group', 'klal_store_wp_content' );
@@ -27,7 +28,8 @@ function register_klal_plugin_settings() {
 	register_setting( 'klal-plugin-settings-group', 'klal_salt');
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_userid' );
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_ip' );	
-	register_setting( 'klal-plugin-settings-group', 'klal_store_useragent' );		
+	register_setting( 'klal-plugin-settings-group', 'klal_store_useragent' );
+	register_setting( 'klal-plugin-settings-group', 'klal_admin_capability' );	
 }
 
 function klal_plugin_settings_page() {
@@ -40,6 +42,14 @@ function klal_plugin_settings_page() {
     <?php do_settings_sections( 'klal-plugin-settings-group' ); ?>
     <p>Filters are evaluated in order.</p>
     <table class="form-table">
+    
+        <tr valign="top">
+        <th scope="row">Log tables</th>
+        <td>
+        	<input type="text" name="klal_tables" value="<?php echo esc_attr( get_option('klal_tables') ); ?>"  size = "80" />
+        	<p><small>Allowed tables to use for logs (comma-delimited, leave out wp_ prefix).</small></p>
+        </td>
+        </tr>    
         
         <tr valign="top">
         <th scope="row">Post(s) to NOT log</th>
@@ -99,7 +109,15 @@ function klal_plugin_settings_page() {
     	<tr valign="top">
         <th scope="row">Store User agent</th>
         <td><input type="checkbox" name="klal_store_useragent" value="true" <?php if ( get_option('klal_store_useragent') ) echo ' checked '; ?> /></td>
-        </tr>    
+        </tr>
+        
+        <tr valign="top">
+        <th scope="row">Admin access</th>
+        <td>
+        	<input type="text" name="klal_admin_capability" value="<?php echo esc_attr( get_option('klal_admin_capability') ); ?>" size = "30" />
+        	<p><small>Capability to check for to view logs in admin</small></p>
+        </td>
+        </tr>            
         
     </table>
     

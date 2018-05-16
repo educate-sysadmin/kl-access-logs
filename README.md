@@ -1,7 +1,7 @@
 # kl-access-logs
 Wordpress plugin to save modified (Combined) Common Log Format access logs in database
 With options to restrict logging by url(s) and role(s) and obfuscate personal identifying data
-Companion plugin: kl-access-logs-analytics
+Companion plugin: kl-analytics
 
 See: https://httpd.apache.org/docs/1.3/logs.html#common
 
