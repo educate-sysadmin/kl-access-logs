@@ -177,13 +177,13 @@ function klal_track () {
 	    // e.g. 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"	    
 	    $remote_host = $_SERVER['REMOTE_ADDR'];
 	    if (get_option('klal_hide_ip')) {
-		    $remote_host = md5($remote_host + get_option('klal_salt'));	
+		    $remote_host = md5($remote_host . get_option('klal_salt'));	
 	    }
 	    $client = "-"; 
 	    $user = wp_get_current_user(); // use wordpress user	
 	    $userid = $user?$user->user_login:null;
 	    if (get_option('klal_hide_userid')) {
-		    $userid= md5($userid + get_option('klal_salt'));
+		    $userid= md5($userid . get_option('klal_salt'));
 	    }
 	    $time = '['.date("d/M/Y:H:i:s O").']';
 	    $datetime = date("Y-m-d H:i:s");
