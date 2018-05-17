@@ -25,6 +25,7 @@ function register_klal_plugin_settings() {
     register_setting( 'klal-plugin-settings-group', 'klal_store_wp_content' );
 	register_setting( 'klal-plugin-settings-group', 'klal_roles_filter_false');
 	register_setting( 'klal-plugin-settings-group', 'klal_roles_filter_true' );
+	register_setting( 'klal-plugin-settings-group', 'klal_ip_filter_false');	
 	register_setting( 'klal-plugin-settings-group', 'klal_salt');
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_userid' );
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_ip' );	
@@ -87,6 +88,14 @@ function klal_plugin_settings_page() {
         	<p><small>If set, only stores logs for matching roles. Separate multiple options with commas.</small></p>        	
         </td>
         </tr>
+        
+        <tr valign="top">
+        <th scope="row">IPs to NOT log</th>
+        <td>
+        	<input type="text" name="klal_ip_filter_false" value="<?php echo esc_attr( get_option('klal_ip_filter_false') ); ?>" size = "80" />
+        	<p><small>If set, does not log for matching IP addresses (pre or post obfuscation values accepted). Separate multiple options with commas.</small></p>        	
+        </td>
+        </tr>        
 
         <tr valign="top">
         <th scope="row">Salt</th>

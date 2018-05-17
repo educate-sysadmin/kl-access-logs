@@ -98,7 +98,20 @@ function klal_track () {
 					
 	    // check filters
 	    $track = true;
+	    
+	    // ip filters
+	    $klal_ip_filter_false = get_option('klal_ip_filter_false');
+		$klal_ip_filters_false = explode(",",$klal_ip_filter_false);	
+		foreach ($klal_ip_filters_false as $ip_filter_false) {
+			$ip = $_SERVER['REMOTE_ADDR'];
+			$ip_var = (get_option('klal_hide_ip'))?md5($remote_host . get_option('klal_salt')):null;	
+			if ($ip == $ip_filter_false || ($ip_var && $ip_var == $ip_filter_false)) {
+				$track = false; break;				
+			}
+		}
+	    if (!$track) return;					
 
+        // url filters
         // get url
 	    $url = $_SERVER['REQUEST_URI']; // $wp->request not available?
 
@@ -106,7 +119,6 @@ function klal_track () {
         if (strpos($url,'wp-content') !== false && !get_option('klal_store_wp_content')) {
             return;
         }
-
 	    // posts filter false
 	    $klal_posts_filter_false = get_option('klal_posts_filter_false');
 	    if ($klal_posts_filter_false) {
@@ -118,8 +130,7 @@ function klal_track () {
 			    }
 		    }
 	    }
-	    if (!$track) return;
-			
+	    if (!$track) return;			
 	    // posts filter true
 	    $klal_posts_filter_true = get_option('klal_posts_filter_true');
 	    if ($klal_posts_filter_true) {
