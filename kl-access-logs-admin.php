@@ -114,55 +114,123 @@ function klal_admin_init(){
 	
 	echo "<h1>KL Access Logs</h1>";
 	
+	// handle selecting table
+	if (isset($_POST['klal_table']) /*&& check_admin_referer('klal_table_nonce')*/) {
+	    if (in_array($_POST['klal_table'], explode(',',get_option('klal_tables')))) {
+	         $klal_table_name = $wpdb->prefix.$_POST['klal_table'];
+	    }
+	}
+	
+	echo '<h2 style="display: inline:">'.$klal_table_name.'</h2>';
+	
+	// provide table selection
+    $tables = explode(',',get_option('klal_tables'));
+    echo '<form action="" method="post" style="display: inline;">';
+	//wp_nonce_field('klal_table_nonce');
+	echo '<select name = "klal_table" id = "klal_table_select">'."\n";
+    foreach ($tables as $table) {               
+        echo '<option value = "'.$table.'"';
+        if ($wpdb->prefix.$table == $klal_table_name) { echo ' selected '; }
+        echo '>';
+        echo $table;
+        echo '</option>'."\n";
+    }	
+    echo '</select>'."\n";
+    // submit_button('change');
+    echo '<input name="submit" id="submit" class="button button-primary" value="change" type="submit">'."\n";
+    echo '</form>';
+	
 	// thanks https://stackoverflow.com/questions/8597846/wordpress-plugin-call-function-on-button-click-in-admin-panel
 	// handle admin requests
 	if (isset($_POST['klal_archive']) && check_admin_referer('klal_archive_nonce')) {
 	    // todo validate klal_archive_date
-    	echo '<p>Archiving logs...</p>';
-    	//$wpdb->show_errors(); // debug only not production
-    	
-        // copy into archive
-        $insert_sql = "INSERT INTO ".$klal_table_name_archive." ( SELECT * FROM ".$klal_table_name." WHERE ".$klal_table_name.".datetime < '".$_POST['klal_archive_date']."');";
-        
-        $insert_result = $wpdb->query( 
-            $insert_sql
-		);
+	    
+	    if (isset($_POST['klal_table_name_from']) && isset($_POST['klal_table_name_from'])
+	        && in_array($_POST['klal_table_name_from'], explode(',',get_option('klal_tables')))
+	        && in_array($_POST['klal_table_name_to'], explode(',',get_option('klal_tables')))
+	        && $_POST['klal_table_name_from'] != $_POST['klal_table_name_to']
+	    ) {
+	    
+	        $klal_table_name_from = $wpdb->prefix.$_POST['klal_table_name_from'];
+	        $klal_table_name_to = $wpdb->prefix.$_POST['klal_table_name_to'];	        
+	    
+        	echo '<p>Archiving logs (from '.$klal_table_name_from.' to '.$klal_table_name_to.')'.'...</p>';
+        	//$wpdb->show_errors(); // debug only not production
+        	
+            // copy into archive
+            $insert_sql = "INSERT INTO ".$klal_table_name_to." ( SELECT * FROM ".$klal_table_name_from." WHERE ".$klal_table_name_from.".datetime < '".$_POST['klal_archive_date']."');";
+            
+            $insert_result = $wpdb->query( 
+                $insert_sql
+		    );
 		
-		// delete from current log
-		if ($insert_result) {
-		    $delete_sql = "DELETE FROM ".$klal_table_name." WHERE datetime < '".$_POST['klal_archive_date']."';";
+		    // delete from current log
+		    if ($insert_result) {
+		        $delete_sql = "DELETE FROM ".$klal_table_name_from." WHERE datetime < '".$_POST['klal_archive_date']."';";
 		
-			$delete_result = $wpdb->query( 			
-			    $delete_sql
-			);
-			if ($delete_result) {
-				echo '<p>'.'Done'.'</p>';
-			} else {
-				echo '<p>'.'Error clearing current log table'.'</p>';
-			}
+			    $delete_result = $wpdb->query( 			
+			        $delete_sql
+			    );
+			    if ($delete_result) {
+				    echo '<p>'.'Done'.'</p>';
+			    } else {
+				    echo '<p>'.'Error clearing current log table'.'</p>';
+			    }
+		    } else {
+		        	echo '<p>'.'No records to archive or error populating archive table'.'</p>';
+		    }
 		} else {
-		    	echo '<p>'.'No records to archive or error populating archive table'.'</p>';
+		    echo '<p>Invalid request</p>';
 		}
   	}
 	
     // show logs
     echo '<h2>Current logs</h2>';
     echo klal_get_logs();
-    // few admin options
+    
+    // admin options
     echo '<p>';
     echo '<a href="">'.'Refresh'.'</a>';
     echo '&nbsp|&nbsp';
-    echo '<a href="'.$_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'].'&download=xlsx'.'" target="_blank">'.'Download .xlsx'.'</a>';
+    $url = $_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'];
+    // fix for wordpress.com
+    if (strpos($url,'__wp__/') !== false) { $url = str_replace("__wp__/","",$url); }
+    echo '<a href="'.$url.'&download=xlsx'.'" target="_blank">'.'Download .xlsx'.'</a>';
     echo '&nbsp|&nbsp';
-    echo '<a href="'.$_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'].'&download=clf'.'" target="_blank">'.'Download CLF'.'</a>';
+    echo '<a href="'.$url.'&download=clf'.'" target="_blank">'.'Download CLF'.'</a>';
     echo '</p>'	;
     
-    // admin options
     echo '<h2>Archive logs</h2>';
     echo '<form action="" method="post">';
 	// nonce: this is a WordPress security feature - see: https://codex.wordpress.org/WordPress_Nonces
-	wp_nonce_field('klal_archive_nonce');
+	wp_nonce_field('klal_archive_nonce');	
   	echo '<input type="hidden" value="true" name="klal_archive" />';  	
+  	// remember selected table
+    echo '<input type="hidden" value="'.(str_replace($wpdb->prefix,'',$klal_table_name)).'" name="klal_table" />';  	  	     	
+  	
+  	// from / to tables
+    $tables = explode(',',get_option('klal_tables'));
+	echo 'From: '.'<select name = "klal_table_name_from">'."\n";
+    foreach ($tables as $table) {               
+        echo '<option value = "'.$table.'"';
+        if ($wpdb->prefix.$table == $klal_table_name) { echo ' selected '; }
+        echo '>';
+        echo $table;
+        echo '</option>'."\n";
+    }	
+    echo '</select>'."\n";
+	echo 'From: '.'<select name = "klal_table_name_to">'."\n";
+    foreach ($tables as $table) {               
+        echo '<option value = "'.$table.'"';
+        if ($wpdb->prefix.$table == $klal_table_name_archive) { echo ' selected '; }
+        echo '>';
+        echo $table;
+        echo '</option>'."\n";
+    }	
+    echo '</select>'."\n";
+
+    echo '<br/>';
+    // date range
   	echo '<label for = "klal_archive_date">Archive logs prior to timestamp:</label>'.'&nbsp;';
   	$default_timestamp = date("Y-m")."-"."01"." "."00:00:00";
   	echo '<input type="text" value="'.$default_timestamp.'" name="klal_archive_date" id="klal_archive_date" />';
@@ -172,4 +240,3 @@ function klal_admin_init(){
 	echo '</div>'."\n"; // class="wrap
         
 }
-
