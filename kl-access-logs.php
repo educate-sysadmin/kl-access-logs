@@ -93,6 +93,8 @@ function klal_track () {
 	global $klal_table_name;
 
     try {
+    
+		$klal_filter = apply_filters('klal_pre', array('context'=>'klal_pre'));
 					
 	    // check filters
 	    $track = true;
@@ -173,18 +175,20 @@ function klal_track () {
 		    }
 	    }
 	    if (!$track) return;
+	    
+		$klal_filter = apply_filters('klal_track', array('context'=>'klal_track'));	    
 				
 	    // save as modified Combined CLF 
 	    // e.g. 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"	    
 	    $remote_host = $_SERVER['REMOTE_ADDR'];
 	    if (get_option('klal_hide_ip')) {
-		    $remote_host = md5($remote_host + get_option('klal_salt'));	
+		    $remote_host = md5($remote_host . get_option('klal_salt'));	
 	    }
 	    $client = "-"; 
 	    $user = wp_get_current_user(); // use wordpress user	
 	    $userid = $user?$user->user_login:null;
 	    if (get_option('klal_hide_userid')) {
-		    $userid= md5($userid + get_option('klal_salt'));
+		    $userid= md5($userid . get_option('klal_salt'));
 	    }
 	    $time = '['.date("d/M/Y:H:i:s O").']';
 	    $datetime = date("Y-m-d H:i:s");
@@ -193,13 +197,14 @@ function klal_track () {
 	    $protocol = $_SERVER['SERVER_PROTOCOL'];
 	    $status = "200"; // todo?
 	    $size = 0; // todo
-	    $referer = $_SERVER['HTTP_REFERER'];
+	    $referer = $_SERVER['HTTP_REFERER']?$_SERVER['HTTP_REFERER']:'';
 	    if (get_option('klal_store_useragent')) {
 		    $useragent = $_SERVER['HTTP_USER_AGENT'];
 	    } else {
 		    $useragent = "-";
 	    }
-			
+
+       	$wpdb->show_errors(); // debug only not production		
 	    $result = $wpdb->insert( 
 		    $klal_table_name, 
 		    array( 
@@ -219,9 +224,11 @@ function klal_track () {
 		    array('%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')
 	    );
 	    
+		$klal_filter = apply_filters('klal_post', array('context'=>'klal_post'));	    
+	    
     } catch (Exception $e) {
         return;
-        write_log($e->getMessage()."\n");
+        //write_log($e->getMessage()."\n");
     }
 }
 		
