@@ -215,7 +215,7 @@ function klal_track () {
 		    $useragent = "-";
 	    }
 
-       	$wpdb->show_errors(); // debug only not production		
+       	//$wpdb->show_errors(); // debug only not production		
 	    $result = $wpdb->insert( 
 		    $klal_table_name, 
 		    array( 
