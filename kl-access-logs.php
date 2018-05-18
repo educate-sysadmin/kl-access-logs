@@ -80,10 +80,10 @@ CREATE TABLE `wp_kl_access_logs_archive` (
     */
 
     // set defaults for options
-    update_option('klal_tables','kl_access_logs,kl_access_logs_archive');
-    update_option('klal_posts_filter_false','wp-admin,wp-login.php,login,logout, wp-content');
-    update_option('klal_roles_filter_false','administrator');
-    update_option('klal_admin_capability','manage_options');    
+    if (!get_option('klal_tables')) { update_option('klal_tables','kl_access_logs,kl_access_logs_archive'); }
+    if (!get_option('klal_posts_filter_false')) { update_option('klal_posts_filter_false','wp-admin,wp-login.php,login,logout, wp-content'); }
+    if (!get_option('klal_roles_filter_false')) { update_option('klal_roles_filter_false','administrator'); }
+    if (!get_option('klal_admin_capability')) { update_option('klal_admin_capability','manage_options'); } 
 }
 		
 // handle the tracking
@@ -99,15 +99,17 @@ function klal_track () {
 	    // check filters
 	    $track = true;
 	    
-	    // ip filters
+	    // ip filters	    
 	    $klal_ip_filter_false = get_option('klal_ip_filter_false');
-		$klal_ip_filters_false = explode(",",$klal_ip_filter_false);	
-		foreach ($klal_ip_filters_false as $ip_filter_false) {
-			$ip = $_SERVER['REMOTE_ADDR'];
-			$ip_var = (get_option('klal_hide_ip'))?md5($remote_host . get_option('klal_salt')):null;	
-			if ($ip == $ip_filter_false || ($ip_var && $ip_var == $ip_filter_false)) {
-				$track = false; break;				
-			}
+		if ($klal_ip_filter_false) {	    
+		    $ip = $_SERVER['REMOTE_ADDR'];
+		    $ip_var = (get_option('klal_hide_ip'))?md5($ip . get_option('klal_salt')):null;			
+		    $klal_ip_filters_false = explode(",",$klal_ip_filter_false);	
+		    foreach ($klal_ip_filters_false as $ip_filter_false) {
+			    if ($ip == $ip_filter_false || ($ip_var && $ip_var == $ip_filter_false)) {
+				    $track = false; break;				
+			    }
+		    }
 		}
 	    if (!$track) return;					
 
