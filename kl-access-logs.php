@@ -28,7 +28,7 @@ function klal_get_user_groups($filter, $user_id) {
 	    $group_name = $row->name;
         $filter_groups = explode(",",$filter);
         foreach ($filter_groups as $filter_group) {
-	        if (strpos($filter_group,$group_name) !== false) { 
+	        if (strpos($group_name,$filter_group) !== false) { 
         	    $groups[] = $group_name;
         	}
         }
