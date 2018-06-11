@@ -2,20 +2,47 @@
 /*
 Plugin Name: KL Access Logs
 Plugin URI: https://github.com/educate-sysadmin/kl-access-logs
-Description: Save modified (Combined) Common Log Format access logs in database
-Version: 0.2
+Description: Save modified (Combined) Common Log Format access logs in database. With KL-specific options.
+Version: 0.3
 Author: b.cunningham@ucl.ac.uk
 Author URI: https://educate.london
 License: GPL2
 */
 
-require_once('kl-access-logs-options.php');
-require_once('kl-access-logs-admin.php');
+/* helper to get array of users' groups, with filter */
+function klal_get_user_groups($filter, $user_id) {
+    global $wpdb;
 
-$klal_db_version = "0.2";
+    // ref http://docs.itthinx.com/document/groups/api/examples/
+    $groups = array(); // to populate
+    $groups_user = new Groups_User( $user_id );
+    // get group objects
+    $user_groups = $groups_user->groups;
+    // get group ids (user is direct member)
+    $user_group_ids = $groups_user->group_ids;
+    // get group ids (user is direct member or by group inheritance)
+    $user_group_ids_deep = $groups_user->group_ids_deep;
+    foreach ($user_group_ids_deep as $group_id) {
+	    $sql = 'SELECT name FROM '.$wpdb->prefix .'groups_group WHERE group_id='.$group_id;
+	    $row = $wpdb->get_row( $sql );
+	    $group_name = $row->name;
+        $filter_groups = explode(",",$filter);
+        foreach ($filter_groups as $filter_group) {
+	        if (strpos($filter_group,$group_name) !== false) { 
+        	    $groups[] = $group_name;
+        	}
+        }
+    }
+    return $groups;
+}
+
+$klal_db_version = "0.3";
 // default table names
 $klal_table_name = $wpdb->prefix . "kl_access_logs";
 $klal_table_name_archive = $klal_table_name . "_archive";
+
+require_once('kl-access-logs-options.php');
+require_once('kl-access-logs-admin.php');
 
 // create or update database table
 function klal_install () {
@@ -33,6 +60,7 @@ CREATE TABLE `wp_kl_access_logs` (
   `remote_host` varchar(32) NOT NULL,
   `client` varchar(1) NOT NULL,
   `userid` varchar(128) NOT NULL,
+  `groups` varchar(128) NULL,  
   `time` varchar(32) NOT NULL,
   `datetime` datetime DEFAULT NULL,
   `method` varchar(8) NOT NULL,
@@ -56,6 +84,7 @@ CREATE TABLE `wp_kl_access_logs_archive` (
   `remote_host` varchar(32) NOT NULL,
   `client` varchar(1) NOT NULL,
   `userid` varchar(128) NOT NULL,
+  `groups` varchar(128) NULL,
   `time` varchar(32) NOT NULL,
   `datetime` datetime DEFAULT NULL,
   `method` varchar(8) NOT NULL,
@@ -85,7 +114,7 @@ CREATE TABLE `wp_kl_access_logs_archive` (
     if (!get_option('klal_roles_filter_false')) { update_option('klal_roles_filter_false','administrator'); }
     if (!get_option('klal_admin_capability')) { update_option('klal_admin_capability','manage_options'); } 
 }
-		
+	
 // handle the tracking
 function klal_track () {
 
@@ -191,7 +220,7 @@ function klal_track () {
 	    
 		$klal_filter = apply_filters('klal_track', array('context'=>'klal_track'));	    
 				
-	    // save as modified Combined CLF 
+	    // save as very modified Combined CLF 
 	    // e.g. 127.0.0.1 - frank [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"	    
 	    $remote_host = $_SERVER['REMOTE_ADDR'];
 	    if (get_option('klal_hide_ip')) {
@@ -200,6 +229,13 @@ function klal_track () {
 	    $client = "-"; 
 	    $user = wp_get_current_user(); // use wordpress user	
 	    $userid = $user?$user->user_login:null;
+	    
+	    // merge groups
+	    $groups = array();
+	    if (get_option('klal_add_groups') && get_option('klal_add_groups') != '') {	    
+	        $groups = implode(",",klal_get_user_groups(get_option('klal_add_groups'), get_current_user_id()));
+	    }
+
 	    if (get_option('klal_hide_userid')) {
 		    $userid= md5($userid . get_option('klal_salt'));
 	    }
@@ -224,6 +260,7 @@ function klal_track () {
 			    'remote_host' => $remote_host, 
 			    'client' => $client,
 			    'userid' => $userid,
+			    'groups' => $groups,			    
 			    'time' => $time,
 			    'datetime' => $datetime,
 			    'method' => $method,

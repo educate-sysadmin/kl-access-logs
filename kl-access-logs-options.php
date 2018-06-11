@@ -30,6 +30,7 @@ function register_klal_plugin_settings() {
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_userid' );
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_ip' );	
 	register_setting( 'klal-plugin-settings-group', 'klal_store_useragent' );
+	register_setting( 'klal-plugin-settings-group', 'klal_add_groups' );	
 	register_setting( 'klal-plugin-settings-group', 'klal_admin_capability' );	
 }
 
@@ -119,6 +120,14 @@ function klal_plugin_settings_page() {
         <th scope="row">Store User agent</th>
         <td><input type="checkbox" name="klal_store_useragent" value="true" <?php if ( get_option('klal_store_useragent') ) echo ' checked '; ?> /></td>
         </tr>
+        
+        <tr valign="top">
+        <th scope="row">Add groups (KL-specific)</th>
+        <td>
+        	<input type="text" name="klal_add_groups" value="<?php echo esc_attr( get_option('klal_add_groups') ); ?>" size = "80" />
+        	<p><small>Populate a column including user groups that loosely match these comma-delimied values.</small></p>
+        </td>
+        </tr>        
         
         <tr valign="top">
         <th scope="row">Admin access</th>

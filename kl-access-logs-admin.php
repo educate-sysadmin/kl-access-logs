@@ -16,12 +16,12 @@ function klal_plugin_menu(){
 add_action('admin_init','klal_requests');
 function klal_requests() {
     if (isset($_GET['download'])) {
-        if ($_GET['download'] =="xlsx") {  
+        if ($_GET['download'] =="csv") {  
             header("Content-type: application/x-msdownload",true,200);
-            header("Content-Disposition: attachment; filename=kl_access_log.xlsx");
+            header("Content-Disposition: attachment; filename=kl_access_log.csv");
             header("Pragma: no-cache");
             header("Expires: 0");
-            echo klal_get_logs();
+            echo klal_get_logs_csv();
             exit();
         }
         if ($_GET['download'] =="clf") {  
@@ -34,6 +34,36 @@ function klal_requests() {
         }        
     }
 }
+
+/* helper: get user_id for username */
+function klal_get_id_for_username($username) {
+    global $wpdb;    
+    $sql = 'SELECT ID FROM '.$wpdb->prefix.'users WHERE user_login = "'.$username.'"';
+	$result = $wpdb->get_row($sql);
+    return $result->ID;
+}
+
+/* temp helper function to add groups to existing records */
+function klal_migrate_groups() {
+
+    global $wpdb;
+    global $klal_table_name;
+
+	$result = $wpdb->get_results( 
+		"SELECT * FROM ".$klal_table_name." ORDER BY datetime DESC;"
+	);
+    
+	if ($result) {
+    	foreach ($result as $row) {
+    	    $user_id = klal_get_id_for_username($row->userid);
+	        $groups = implode(",",klal_get_user_groups(get_option('klal_add_groups'), $user_id));
+	        $sql = 'UPDATE '.$klal_table_name.' SET groups = "'.$groups.'" WHERE id = '.$row->id;
+	        $wpdb->query( $sql );
+    	}    	
+    }    
+}
+// option to call
+//add_action('admin_init','klal_migrate_groups');
 
 function klal_get_logs() {
 	global $wp, $wpdb;
@@ -79,6 +109,50 @@ function klal_get_logs() {
 	$return .= '</table>'."\n";	
 	
 	return $return;
+}
+
+
+function klal_get_logs_csv() {
+	global $wp, $wpdb;
+	global $klal_table_name;
+	
+	$return = "";
+	
+	$result = $wpdb->get_results( 
+		"SELECT * FROM ".$klal_table_name." ORDER BY datetime DESC;"
+	);
+	
+	return klutil_array_to_csv($result);    
+}
+
+/* helper to convert array to csv */
+if (!function_exists('klutil_array_to_csv')) {
+    function klutil_array_to_csv($array) {
+        $output = '';
+        // field names row
+        $firstrow = $array[0];        
+        $record = '';
+        foreach ($firstrow as $key => $_) {
+            $record .= $key.',';
+        }
+        if (substr($record,strlen($record)-1) == ',') {
+            $record = substr($record,0,strlen($record)-1); // remove final comma
+        }
+        $output .= $record."\n";
+        
+        // data rows
+        foreach ($array as $row) {
+            $record = '';
+            foreach ($row as $key => $val) {
+                $record .= $val.',';
+            }
+            if (substr($record,strlen($record)-1) == ',') {
+                $record = substr($record,0,strlen($record)-1); // remove final comma
+            }
+            $output .= $record."\n";
+        }
+        return $output;             
+    }
 }
 
 function klal_get_logs_clf() {
@@ -186,6 +260,7 @@ function klal_admin_init(){
 	
     // show logs
     echo '<h2>Current logs</h2>';
+    echo '<p><a href="">'.'Refresh'.'</a></p>';    
     echo klal_get_logs();
     
     // admin options
@@ -195,7 +270,7 @@ function klal_admin_init(){
     $url = $_SERVER['SCRIPT_NAME'].'?'.$_SERVER['QUERY_STRING'];
     // fix for wordpress.com
     if (strpos($url,'__wp__/') !== false) { $url = str_replace("__wp__/","",$url); }
-    echo '<a href="'.$url.'&download=xlsx'.'" target="_blank">'.'Download .xlsx'.'</a>';
+    echo '<a href="'.$url.'&download=csv'.'" target="_blank">'.'Download .csv'.'</a>';
     echo '&nbsp|&nbsp';
     echo '<a href="'.$url.'&download=clf'.'" target="_blank">'.'Download CLF'.'</a>';
     echo '</p>'	;
