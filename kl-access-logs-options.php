@@ -31,7 +31,7 @@ function register_klal_plugin_settings() {
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_ip' );	
 	register_setting( 'klal-plugin-settings-group', 'klal_store_useragent' );
 	register_setting( 'klal-plugin-settings-group', 'klal_add_groups' );	
-	register_setting( 'klal-plugin-settings-group', 'klal_add_roles' );		
+	register_setting( 'klal-plugin-settings-group', 'klal_add_roles' );
 	register_setting( 'klal-plugin-settings-group', 'klal_admin_capability' );	
 }
 
