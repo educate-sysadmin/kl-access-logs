@@ -31,6 +31,7 @@ function register_klal_plugin_settings() {
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_ip' );	
 	register_setting( 'klal-plugin-settings-group', 'klal_store_useragent' );
 	register_setting( 'klal-plugin-settings-group', 'klal_add_groups' );	
+	register_setting( 'klal-plugin-settings-group', 'klal_add_roles' );		
 	register_setting( 'klal-plugin-settings-group', 'klal_admin_capability' );	
 }
 
@@ -128,6 +129,14 @@ function klal_plugin_settings_page() {
         	<p><small>Populate a column including user groups that loosely match these comma-delimied values.</small></p>
         </td>
         </tr>        
+        
+        <tr valign="top">
+        <th scope="row">Add roles (KL-specific)</th>
+        <td>
+        	<input type="text" name="klal_add_roles" value="<?php echo esc_attr( get_option('klal_add_roles') ); ?>" size = "80" />
+        	<p><small>Populate a column including user roles that loosely match these comma-delimied values.</small></p>
+        </td>
+        </tr>                
         
         <tr valign="top">
         <th scope="row">Admin access</th>

@@ -3,7 +3,7 @@
 Plugin Name: KL Access Logs
 Plugin URI: https://github.com/educate-sysadmin/kl-access-logs
 Description: Save modified (Combined) Common Log Format access logs in database. With KL-specific options.
-Version: 0.3
+Version: 0.4
 Author: b.cunningham@ucl.ac.uk
 Author URI: https://educate.london
 License: GPL2
@@ -36,7 +36,28 @@ function klal_get_user_groups($filter, $user_id) {
     return $groups;
 }
 
-$klal_db_version = "0.3";
+/* helper to get array of users' roles, with filter */
+function klal_get_user_roles($filter, $user_id) {
+    $roles = array();
+    $user = get_user_by( 'id', $user_id);    
+    if ( !($user instanceof WP_User)) {
+        $roles = array('visitor');
+    } else {
+       	$roles = $user->roles;
+    }
+    $return_roles = array();
+    $filter_roles = explode(",",$filter);    
+    foreach ($roles as $role) {
+        foreach ($filter_roles as $filter_role) {
+            if (strpos($role,$filter_role) !== false) { 
+        	    $return_roles[] = $role;
+        	}
+        }    
+    }
+    return $return_roles; 
+}
+
+$klal_db_version = "0.4";
 // default table names
 $klal_table_name = $wpdb->prefix . "kl_access_logs";
 $klal_table_name_archive = $klal_table_name . "_archive";
@@ -61,6 +82,7 @@ CREATE TABLE `wp_kl_access_logs` (
   `client` varchar(1) NOT NULL,
   `userid` varchar(128) NOT NULL,
   `groups` varchar(128) NULL,  
+  `roles` varchar(128) NULL,    
   `time` varchar(32) NOT NULL,
   `datetime` datetime DEFAULT NULL,
   `method` varchar(8) NOT NULL,
@@ -85,6 +107,7 @@ CREATE TABLE `wp_kl_access_logs_archive` (
   `client` varchar(1) NOT NULL,
   `userid` varchar(128) NOT NULL,
   `groups` varchar(128) NULL,
+  `roles` varchar(128) NULL,  
   `time` varchar(32) NOT NULL,
   `datetime` datetime DEFAULT NULL,
   `method` varchar(8) NOT NULL,
@@ -231,10 +254,16 @@ function klal_track () {
 	    $userid = $user?$user->user_login:null;
 	    
 	    // merge groups
-	    $groups = array();
+	    $groups_field = array();
 	    if (get_option('klal_add_groups') && get_option('klal_add_groups') != '') {	    
-	        $groups = implode(",",klal_get_user_groups(get_option('klal_add_groups'), get_current_user_id()));
+	        $groups_field = implode(",",klal_get_user_groups(get_option('klal_add_groups'), get_current_user_id()));
 	    }
+	    
+	    // merge groups
+	    $roles_field = array();
+	    if (get_option('klal_add_roles') && get_option('klal_add_roles') != '') {	    
+	        $roles_field = implode(",",klal_get_user_roles(get_option('klal_add_roles'), get_current_user_id()));
+	    }	    
 
 	    if (get_option('klal_hide_userid')) {
 		    $userid= md5($userid . get_option('klal_salt'));
@@ -260,7 +289,8 @@ function klal_track () {
 			    'remote_host' => $remote_host, 
 			    'client' => $client,
 			    'userid' => $userid,
-			    'groups' => $groups,			    
+			    'groups' => $groups_field,
+			    'roles' => $roles_field,			    
 			    'time' => $time,
 			    'datetime' => $datetime,
 			    'method' => $method,
@@ -271,7 +301,7 @@ function klal_track () {
 			    'referer' => $referer,
 			    'useragent' => $useragent			    
 		    ),	
-		    array('%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')
+		    array('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')
 	    );
 	    
 		$klal_filter = apply_filters('klal_post', array('context'=>'klal_post'));	    
