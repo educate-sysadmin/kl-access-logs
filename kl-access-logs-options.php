@@ -32,7 +32,10 @@ function register_klal_plugin_settings() {
 	register_setting( 'klal-plugin-settings-group', 'klal_store_useragent' );
 	register_setting( 'klal-plugin-settings-group', 'klal_add_groups' );	
 	register_setting( 'klal-plugin-settings-group', 'klal_add_roles' );
+	register_setting( 'klal-plugin-settings-group', 'klal_add_category_1' );	
+	register_setting( 'klal-plugin-settings-group', 'klal_add_category_2' );		
 	register_setting( 'klal-plugin-settings-group', 'klal_admin_capability' );	
+	register_setting( 'klal-plugin-settings-group', 'klal_extra' );		
 }
 
 function klal_plugin_settings_page() {
@@ -139,12 +142,36 @@ function klal_plugin_settings_page() {
         </tr>                
         
         <tr valign="top">
+        <th scope="row">Add category 1 (KL-specific)</th>
+        <td>
+        	<input type="text" name="klal_add_category_1" value="<?php echo esc_attr( get_option('klal_add_category_1') ); ?>" size = "80" />
+        	<p><small>Populate a column including page categories that match these comma-delimied values.</small></p>
+        </td>
+        </tr>                
+        
+        <tr valign="top">
+        <th scope="row">Add category 2 (KL-specific)</th>
+        <td>
+        	<input type="text" name="klal_add_category_2" value="<?php echo esc_attr( get_option('klal_add_category_2') ); ?>" size = "80" />
+        	<p><small>Populate a column including page categories that match these comma-delimied values.</small></p>
+        </td>
+        </tr>
+        
+        <tr valign="top">
         <th scope="row">Admin access</th>
         <td>
         	<input type="text" name="klal_admin_capability" value="<?php echo esc_attr( get_option('klal_admin_capability') ); ?>" size = "30" />
         	<p><small>Capability to check for to view logs in admin</small></p>
         </td>
         </tr>            
+        
+        <tr valign="top">
+        <th scope="row">KL Access Logs extra</th>
+        <td>
+        	<input type="text" name="klal_extra" value="<?php echo esc_attr( get_option('klal_extra') ); ?>" size = "80" />
+        	<p><small>User field to store any value</small></p>
+        </td>
+        </tr>        
         
     </table>
     
