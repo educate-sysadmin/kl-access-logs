@@ -3,7 +3,7 @@
 Plugin Name: KL Access Logs
 Plugin URI: https://github.com/educate-sysadmin/kl-access-logs
 Description: Save modified (Combined) Common Log Format access logs in database. With KL-specific options.
-Version: 0.4
+Version: 0.5
 Author: b.cunningham@ucl.ac.uk
 Author URI: https://educate.london
 License: GPL2
