@@ -157,7 +157,7 @@ function klal_get_post_id($url) {
 }
 
 /* helper to get array of post categories, with filter */
-function klal_get_categories($filter, $post_id) {    
+function klal_get_categories($filter, $post_id) {    	
     $categories_ids = wp_get_post_categories($post_id);
     $categories = array();
     foreach ($categories_ids as $categories_id) {
@@ -187,7 +187,7 @@ function klal_track () {
 		if ($klal_ip_filter_false) {	    
 		    $ip = $_SERVER['REMOTE_ADDR'];
 		    $ip_var = (get_option('klal_hide_ip'))?md5($ip . get_option('klal_salt')):null;			
-		    $klal_ip_filters_false = explode(",",$klal_ip_filter_false);	
+		    $klal_ip_filters_false = explode(",",$klal_ip_filter_false);
 		    foreach ($klal_ip_filters_false as $ip_filter_false) {
 			    if ($ip == $ip_filter_false || ($ip_var && $ip_var == $ip_filter_false)) {
 				    $track = false; break;				
@@ -285,13 +285,13 @@ function klal_track () {
 	    $userid = $user?$user->user_login:null;
 	    
 	    // merge groups
-	    $groups_field = array();
+	    $groups_field = "";
 	    if (get_option('klal_add_groups') && get_option('klal_add_groups') != '') {	    
 	        $groups_field = implode(",",klal_get_user_groups(get_option('klal_add_groups'), get_current_user_id()));
 	    }
 	    
 	    // merge roles
-	    $roles_field = array();
+	    $roles_field = "";
 	    if (get_option('klal_add_roles') && get_option('klal_add_roles') != '') {	    
 	        $roles_field = implode(",",klal_get_user_roles(get_option('klal_add_roles'), get_current_user_id()));
 	    }
@@ -324,6 +324,7 @@ function klal_track () {
 	    }
 
        	//$wpdb->show_errors(); // debug only not production		
+       	
 	    $result = $wpdb->insert( 
 		    $klal_table_name, 
 		    array( 
@@ -345,7 +346,7 @@ function klal_track () {
 			    'useragent' => $useragent
 		    ),	
 		    array('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s')
-	    );
+	    );	    
 	    
 		$klal_filter = apply_filters('klal_post', array('context'=>'klal_post'));	    
 	    
