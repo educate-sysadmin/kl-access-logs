@@ -3,7 +3,7 @@
 Plugin Name: KL Access Logs
 Plugin URI: https://github.com/educate-sysadmin/kl-access-logs
 Description: Save modified (Combined) Common Log Format access logs in database. With KL-specific options.
-Version: 0.6
+Version: 0.7
 Author: b.cunningham@ucl.ac.uk
 Author URI: https://educate.london
 License: GPL2
@@ -216,6 +216,7 @@ function klal_track () {
 		    }
 	    }
 	    if (!$track) return;			
+	    
 	    // posts filter true
 	    $klal_posts_filter_true = get_option('klal_posts_filter_true');
 	    if ($klal_posts_filter_true) {
@@ -228,6 +229,28 @@ function klal_track () {
 		    }
 	    }
 	    if (!$track) return; 
+	    
+	    // get useragent
+	    if (get_option('klal_store_useragent')) {
+		    $useragent = $_SERVER['HTTP_USER_AGENT'];
+	    } else {
+		    $useragent = "-";
+	    }	    
+	    
+	    // useragent filter false
+	    if (get_option('klal_store_useragent')) {
+			$klal_useragent_filter_false = get_option('klal_useragent_filter_false');
+			if ($klal_useragent_filter_false) {
+				$track = true;
+				$klal_useragent_filters_false = explode(",",$klal_useragent_filter_false);	
+				foreach ($klal_useragent_filters_false as $useragent_filter_false) {
+					if (strpos($useragent,$useragent_filter_false) !== false ) {						
+						$track = false; break;
+					}
+				}
+			}
+			if (!$track) return;
+		}
 
         // get user and roles
 	    $user = wp_get_current_user();
@@ -322,11 +345,6 @@ function klal_track () {
 	    $status = "200"; // todo?
 	    $size = 0; // todo
 	    $referer = isset($_SERVER['HTTP_REFERER'])?$_SERVER['HTTP_REFERER']:'';
-	    if (get_option('klal_store_useragent')) {
-		    $useragent = $_SERVER['HTTP_USER_AGENT'];
-	    } else {
-		    $useragent = "-";
-	    }
 
        	//$wpdb->show_errors(); // debug only not production		
        	

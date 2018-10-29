@@ -26,6 +26,7 @@ function register_klal_plugin_settings() {
 	register_setting( 'klal-plugin-settings-group', 'klal_roles_filter_false');
 	register_setting( 'klal-plugin-settings-group', 'klal_roles_filter_true' );
 	register_setting( 'klal-plugin-settings-group', 'klal_ip_filter_false');	
+	register_setting( 'klal-plugin-settings-group', 'klal_useragent_filter_false');	
 	register_setting( 'klal-plugin-settings-group', 'klal_salt');
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_userid' );
 	register_setting( 'klal-plugin-settings-group', 'klal_hide_ip' );	
@@ -60,7 +61,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Post(s) to NOT log</th>
         <td>
-        	<input type="text" name="klal_posts_filter_false" value="<?php echo esc_attr( get_option('klal_posts_filter_false') ); ?>"  size = "80" />
+        	<input type="text" name="klal_posts_filter_false" value="<?php echo esc_attr( get_option('klal_posts_filter_false') ); ?>"  size = "128" />
         	<p><small>If set, does not log for matching URL portions. Separate multiple options with commas.</small></p>
         </td>
         </tr>
@@ -68,7 +69,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Post(s) to log</th>
         <td>
-        	<input type="text" name="klal_posts_filter_true" value="<?php echo esc_attr( get_option('klal_posts_filter_true') ); ?>"  size = "80" />
+        	<input type="text" name="klal_posts_filter_true" value="<?php echo esc_attr( get_option('klal_posts_filter_true') ); ?>"  size = "128" />
         	<p><small>If set, only stores logs for matching URL portions. Separate multiple options with commas.</small></p>
         </td>
         </tr>
@@ -81,7 +82,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Role(s) to NOT log</th>
         <td>
-        	<input type="text" name="klal_roles_filter_false" value="<?php echo esc_attr( get_option('klal_roles_filter_false') ); ?>" size = "80" />
+        	<input type="text" name="klal_roles_filter_false" value="<?php echo esc_attr( get_option('klal_roles_filter_false') ); ?>" size = "128" />
         	<p><small>If set, does not log for matching roles. Separate multiple options with commas.</small></p>        	
         </td>
         </tr>
@@ -89,7 +90,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Role(s) to log</th>
         <td>
-        	<input type="text" name="klal_roles_filter_true" value="<?php echo esc_attr( get_option('klal_roles_filter_true') ); ?>" size = "80" />
+        	<input type="text" name="klal_roles_filter_true" value="<?php echo esc_attr( get_option('klal_roles_filter_true') ); ?>" size = "128" />
         	<p><small>If set, only stores logs for matching roles. Separate multiple options with commas.</small></p>        	
         </td>
         </tr>
@@ -97,8 +98,16 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">IPs to NOT log</th>
         <td>
-        	<input type="text" name="klal_ip_filter_false" value="<?php echo esc_attr( get_option('klal_ip_filter_false') ); ?>" size = "80" />
+        	<input type="text" name="klal_ip_filter_false" value="<?php echo esc_attr( get_option('klal_ip_filter_false') ); ?>" size = "128" />
         	<p><small>If set, does not log for matching IP addresses (pre or post obfuscation values accepted). Separate multiple options with commas.</small></p>        	
+        </td>
+        </tr>
+        
+        <tr valign="top">
+        <th scope="row">User agents to NOT log</th>
+        <td>
+        	<input type="text" name="klal_useragent_filter_false" value="<?php echo esc_attr( get_option('klal_useragent_filter_false') ); ?>" size = "128" />
+        	<p><small>If set, does not log for matching user agents (loosely matching). Separate multiple options with commas.</small></p>        	
         </td>
         </tr>        
 
@@ -128,7 +137,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Add groups (KL-specific)</th>
         <td>
-        	<input type="text" name="klal_add_groups" value="<?php echo esc_attr( get_option('klal_add_groups') ); ?>" size = "80" />
+        	<input type="text" name="klal_add_groups" value="<?php echo esc_attr( get_option('klal_add_groups') ); ?>" size = "128" />
         	<p><small>Populate a column including user groups that loosely match these comma-delimied values.</small></p>
         </td>
         </tr>        
@@ -136,7 +145,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Add roles (KL-specific)</th>
         <td>
-        	<input type="text" name="klal_add_roles" value="<?php echo esc_attr( get_option('klal_add_roles') ); ?>" size = "80" />
+        	<input type="text" name="klal_add_roles" value="<?php echo esc_attr( get_option('klal_add_roles') ); ?>" size = "128" />
         	<p><small>Populate a column including user roles that loosely match these comma-delimied values.</small></p>
         </td>
         </tr>                
@@ -144,7 +153,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Add category 1 (KL-specific)</th>
         <td>
-        	<input type="text" name="klal_add_category_1" value="<?php echo esc_attr( get_option('klal_add_category_1') ); ?>" size = "80" />
+        	<input type="text" name="klal_add_category_1" value="<?php echo esc_attr( get_option('klal_add_category_1') ); ?>" size = "128" />
         	<p><small>Populate a column including page categories that match these comma-delimied values.</small></p>
         </td>
         </tr>                
@@ -152,7 +161,7 @@ function klal_plugin_settings_page() {
         <tr valign="top">
         <th scope="row">Add category 2 (KL-specific)</th>
         <td>
-        	<input type="text" name="klal_add_category_2" value="<?php echo esc_attr( get_option('klal_add_category_2') ); ?>" size = "80" />
+        	<input type="text" name="klal_add_category_2" value="<?php echo esc_attr( get_option('klal_add_category_2') ); ?>" size = "128" />
         	<p><small>Populate a column including page categories that match these comma-delimied values.</small></p>
         </td>
         </tr>
