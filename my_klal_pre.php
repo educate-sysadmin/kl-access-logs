@@ -1,3 +1,4 @@
+// snippet sample
 // store access logs for participants in dedicated table
 function my_klal_pre() {
   
@@ -16,4 +17,4 @@ function my_klal_pre() {
   }    
 }
 
-add_action('klal_pre','my_klal_pre');
+//add_action('klal_pre','my_klal_pre'); // uncomment as required
